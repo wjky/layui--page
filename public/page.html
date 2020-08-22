@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="layui/css/layui.css">
+    <style>
+        .layui-container {
+            margin-top: 50px;
+            width: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #mylist li {
+            line-height: 26px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layui-container">
+        <h3>新闻列表</h3>
+        <hr>
+        <ul id="mylist">
+            
+        </ul>
+        <script type="text/html" id="temp1">
+            {% for item in list %}
+            <li>{{loop.index}} - {{item.title}}</li>
+            {% endfor %}
+        </script>
+        <hr>
+        <div id="test1"></div>
+    </div>
+
+    <script src="layui/layui.all.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/nunjucks/3.0.1/nunjucks.min.js"></script>
+
+    <script>
+        var laypage = layui.laypage;
+        var $ = layui.jquery;
+        laypage.render({
+            elem: 'test1'
+            , count: 100 //数据总数，从服务端得到
+            , limit: 10
+            , groups: 3
+            // ,layout: ['count', 'prev', 'page', 'next', 'limit', 'refresh', 'skip']
+            , jump: function (obj, first) {
+                //obj包含了当前分页的所有参数，比如：
+                // console.log(obj);
+                // console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。
+                // console.log(obj.limit); //得到每页显示的条数
+
+                $.ajax({
+                    type: "get",
+                    url: "/news",
+                    data: {curr:obj.curr, limit:obj.limit},
+                    dataType: "json",
+                    success: function (result) {
+                        console.log(result);
+                        let env = nunjucks.configure({ autoescape: true });
+                        let res = env.renderString($('#temp1').html(), { list: result });
+                        $('#mylist').html(res)
+                    }
+                });
+
+                //首次不执行
+                if (!first) {
+                    //do something
+                }
+            }
+        });
+
+
+    </script>
+</body>
+
+</html>
